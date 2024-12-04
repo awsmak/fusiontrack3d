@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  fusiontrack3d:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: fusiontrack3d
+    volumes:
+      - .:/workspace
+      - ./data:/workspace/data
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8888:8888"  # For Jupyter Notebook access
+      - "6006:6006"  # For TensorBoard visualization
+    command: jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
