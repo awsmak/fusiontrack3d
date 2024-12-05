@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     python3.10-dev \
     git \
     wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Make Python 3.10 the default python version
