@@ -1,0 +1,26 @@
+{
+    "name": "FusionTrack3D Development",
+    
+    // This tells VSCode to use our existing docker-compose setup
+    "dockerComposeFile": "../docker-compose.yml",
+    
+    // Specify the service from docker-compose.yml we want to use
+    "service": "fusiontrack3d",
+    
+    // This is the key part - it tells VSCode which directory to open automatically
+    "workspaceFolder": "/workspace",
+    
+    // Useful extensions for our development
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter"
+            ]
+        }
+    },
+    
+    // This ensures we have a consistent shell
+    "remoteUser": "root"
+}
