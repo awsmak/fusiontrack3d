@@ -16,6 +16,12 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     unzip \
+    # OpenCV dep
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Make Python 3.10 the default python version
