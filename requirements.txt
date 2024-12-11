@@ -22,3 +22,6 @@ ipykernel==6.26.0  # Added for Jupyter notebook kernel support
 
 # Testing framework
 pytest==7.4.0
+
+# yolo
+ultralytics==8.0.196
