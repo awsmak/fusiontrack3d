@@ -108,23 +108,75 @@ class DataVisualizer:
         Show multiple visualizations of the same frame:
         1. Original image
         2. Image with LiDAR overlay
-        3. 3D point cloud
-        4. Bird's eye view
+        3. Bird's eye view
         """
-        plt.figure(figsize=(20, 10))
+        plt.figure(figsize=(20, 5))
         
         # Original image
-        plt.subplot(221)
+        plt.subplot(131)
         plt.imshow(frame_data['image'])
         plt.title('Camera Image')
         plt.axis('off')
         
         # Image with LiDAR overlay
-        plt.subplot(222)
-        DataVisualizer.visualize_frame(frame_data, show_lidar_overlay=True)
+        plt.subplot(132)
+        image = frame_data['image'].copy()
+        points = frame_data['points']
+        calib = frame_data['calib']
+        
+        # Project LiDAR points onto image
+        points_h = np.hstack([points[:, :3], np.ones((points.shape[0], 1))])
+        points_cam = np.dot(points_h, calib['Tr'].T)
+        points_rect = np.dot(points_cam, calib['R0_rect'].T)
+        points_proj = np.dot(points_rect, calib['P2'].T)
+        pixels = points_proj[:, :2] / points_proj[:, 2:3]
+        
+        mask = (points_rect[:, 2] > 0) & \
+            (pixels[:, 0] >= 0) & (pixels[:, 0] < image.shape[1]) & \
+            (pixels[:, 1] >= 0) & (pixels[:, 1] < image.shape[0])
+        
+        depths = points_rect[mask, 2]
+        pixels = pixels[mask].astype(np.int32)
+        colors = plt.cm.viridis((depths - depths.min()) / (depths.max() - depths.min()))
+        colors = (colors[:, :3] * 255).astype(np.uint8)
+        
+        for (x, y), color in zip(pixels, colors):
+            cv2.circle(image, (x, y), 2, color.tolist(), -1)
+        
+        plt.imshow(image)
         plt.title('LiDAR Projection')
         plt.axis('off')
         
-        # Point cloud visualizations will be shown separately using Open3D
-        DataVisualizer.visualize_point_cloud(frame_data['points'], view_dims='3d')
-        DataVisualizer.visualize_point_cloud(frame_data['points'], view_dims='bev')
+        # Bird's eye view
+        plt.subplot(133)
+        # Filter points within range
+        side_range = (-20, 20)
+        size_pixels = 800
+        mask = (points[:, 0] >= side_range[0]) & (points[:, 0] <= side_range[1]) & \
+            (points[:, 1] >= side_range[0]) & (points[:, 1] <= side_range[1])
+        points_bev = points[mask]
+        
+        # Create BEV image
+        resolution = (side_range[1] - side_range[0]) / size_pixels
+        bev_image = np.zeros((size_pixels, size_pixels, 3), dtype=np.uint8)
+        
+        # Convert points to pixel coordinates
+        x_img = ((points_bev[:, 0] - side_range[0]) / resolution).astype(np.int32)
+        y_img = ((points_bev[:, 1] - side_range[0]) / resolution).astype(np.int32)
+        
+        # Color by height
+        colors = plt.cm.viridis((points_bev[:, 2] - points_bev[:, 2].min()) / 
+                            (points_bev[:, 2].max() - points_bev[:, 2].min()))
+        colors = (colors[:, :3] * 255).astype(np.uint8)
+        
+        # Plot points
+        for x, y, color in zip(x_img, y_img, colors):
+            if 0 <= x < size_pixels and 0 <= y < size_pixels:
+                bev_image[y, x] = color
+        
+        plt.imshow(bev_image)
+        plt.title('Bird\'s Eye View')
+        plt.axis('off')
+        
+        plt.tight_layout()
+        plt.show()
