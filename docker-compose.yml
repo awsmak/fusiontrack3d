@@ -9,8 +9,12 @@ services:
     volumes:
       - .:/workspace
       - ./data:/workspace/data
+      - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - MESA_GL_VERSION_OVERRIDE=3.3
     deploy:
       resources:
         reservations:
@@ -19,6 +23,6 @@ services:
               count: 1
               capabilities: [gpu]
     ports:
-      - "8888:8888"  # For Jupyter Notebook access
-      - "6006:6006"  # For TensorBoard visualization
+      - "8888:8888"  # For Jupyter Notebook
+      - "6006:6006"  # For TensorBoard
     command: jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
